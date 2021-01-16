@@ -27,7 +27,7 @@ namespace Simulation
             this.nonPredatorQuantity = nonPredatorQuantity;
         }
 
-        public void Animals()
+        public void AddAnimals()
         {
 
             for (int i = 0; i < predatorQuantity; i++) //create predators
@@ -56,7 +56,7 @@ namespace Simulation
 
         }
 
-        int[,] Grid()
+        int[,] InitializeGrid()
         {
             //(0,0) = left down corner
             int size = this.size_x * this.size_y;
@@ -102,7 +102,7 @@ namespace Simulation
 
         public void Run()
         {
-            int[,] grid = Grid();
+            int[,] grid = InitializeGrid();
             int currentTurn = 0;
             while (currentTurn < maxTurn && predators.Count > 0)
             {
@@ -116,14 +116,14 @@ namespace Simulation
                 }
                 currentTurn++;
                 Console.WriteLine("\nTurn: {0}", currentTurn);
-                this.Move(grid);
+                this.MoveAnimals(grid);
                 this.Eat(currentTurn);
                 this.Reproduce(currentTurn);
 
             }
         }
 
-        void Move(int[,] grid)
+        void MoveAnimals(int[,] grid)
         {
             foreach (Predator predator in predators) //move all predators
             {
