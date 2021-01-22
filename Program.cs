@@ -11,8 +11,7 @@ namespace Simulation
         public static void Main(string[] args)
         {
 
-            Simulation simulation = new Simulation(5, 5, 5, 5, 10);
-            simulation.AddAnimals();
+            Simulation simulation = new Simulation(5, 5, 5, 10);
             simulation.Run();
             
         }

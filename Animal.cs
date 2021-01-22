@@ -4,12 +4,14 @@ using System.Text;
 
 namespace Simulation
 {
+    
     public enum Sex
     {
         Male, Female
     }
-    class Animal
+    public class Animal
     {
+        public int indexAt2D;
         public Sex sex; 
         public int position_x;
         public int position_y;

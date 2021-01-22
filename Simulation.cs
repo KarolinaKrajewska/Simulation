@@ -5,67 +5,121 @@ using System.Text;
 
 namespace Simulation
 {
+
     class Simulation
     {
         int size_x;//size x of the grid
         int size_y; //size y of the grid
         int maxTurn; //max number of turns
-        int predatorQuantity;
-        int nonPredatorQuantity;
+        int quantity;
         int index; //indices of animals; has to be incremented before each use
         public List<Predator> predators = new List<Predator>();
         public List<NonPredator> nonpredators = new List<NonPredator>();
+        public delegate void collectDeadAnimals(Animal animal, object[,] grid);
+        collectDeadAnimals collect;
+        List<Animal> deadAnimals = new List<Animal>();
+        List<Animal> hasReproducedList = new List<Animal>();
+        public object[,] grid;
 
         Random random = new Random();
 
-        public Simulation(int size_x, int size_y, int maxTurn, int predatorQuantity, int nonPredatorQuantity)
+        public Simulation(int size_x, int size_y, int maxTurn, int quantity)
         {
             this.size_x = size_x;
             this.size_y = size_y;
             this.maxTurn = maxTurn;
-            this.predatorQuantity = predatorQuantity;
-            this.nonPredatorQuantity = nonPredatorQuantity;
+            this.quantity = quantity;
         }
 
-        public void AddAnimals()
-        {
-
-            for (int i = 0; i < predatorQuantity; i++) //create predators
+        public void AddAnimals(object[,] grid)
+        {//i = x + (size_x * y)
+            
+            for (int i = 0; i < quantity; i++) //create predators and nonpredators
             {
+                int isPredator = random.Next(2);
                 int x = random.Next(size_x);
                 int y = random.Next(size_y);
                 index++;
-                predators.Add(new Predator(GetRandomSex(), x, y, index, 1, this.size_x));
-                Predator currentPredator = predators[i];
-                Console.WriteLine("New Predator {0} - x: {1}, y: {2}, sex: {3}", currentPredator.id,
-                    currentPredator.position_x, currentPredator.position_y, currentPredator.sex);
+                if (isPredator == 1) //create a predator
+                {
+                    Predator predator = new Predator(GetRandomSex(), x, y, index, 1, this.size_x);
+                    predators.Add(predator);
+                    AddAnimalToGrid(grid, predator.position_i, predator);
+                    Console.WriteLine("New Predator {0} - x: {1}, y: {2}, sex: {3}", predator.id,
+                        predator.position_x, predator.position_y, predator.sex);
+                }
+                else if (isPredator == 0) //create a nonpredator
+                {
+                    NonPredator nonpredator = new NonPredator(GetRandomSex(), x, y, index, this.size_x);
+                    nonpredators.Add(nonpredator);
+                    AddAnimalToGrid(grid, nonpredator.position_i, nonpredator);
+                    Console.WriteLine("New NonPredator {0} - x: {1}, y: {2}, sex: {3}", nonpredator.id,
+                        nonpredator.position_x, nonpredator.position_y, nonpredator.sex);
+                }
             }
-
-            for (int i = 0; i < nonPredatorQuantity; i++) //create nonpredators
-            {
-                int x = random.Next(size_x);
-                int y = random.Next(size_y);
-                index++;
-                nonpredators.Add(new NonPredator(GetRandomSex(), x, y, index, this.size_x));
-                NonPredator currentnonPredator = nonpredators[i];
-                Console.WriteLine("New NonPredator {0} - x: {1}, y: {2}, sex: {3}", currentnonPredator.id,
-                    currentnonPredator.position_x, currentnonPredator.position_y, currentnonPredator.sex);
-
-            }
-
-
         }
 
-        int[,] InitializeGrid()
+        void AddAnimalToGrid(object[,] grid, int index, Animal animal)
         {
-            //(0,0) = left down corner
+            
+            if (animal is Predator)
+            {
+                for (int i = 4; i <= 6; i++)
+                {
+                    if (grid[index, i] == null)
+                    {
+                        grid[index, i] = animal;
+                        Predator predator = (Predator)grid[index, i];
+                        animal.indexAt2D = i;
+                        break;
+                    }
+                    else if (grid[index, 6] != null)
+                    {
+                        Console.WriteLine("Too many predators on this tile! Predator {0} will die.", animal.id);
+                        grid[animal.position_i, animal.indexAt2D] = null;
+                        deadAnimals.Add(animal);
+                        animal.hasReproduced = true;
+                        animal.alive = false;
+                        break;
+                    }
+                }
+
+            }
+            else if (animal is NonPredator)
+            {
+                for (int j = 7; j <= 9; j++)
+                {
+                    if (grid[index, j] == null)
+                    {
+                        grid[index, j] = animal;
+                        animal.indexAt2D = j;
+                        break;
+                    }
+                    else if (grid[index, 9] != null)
+                    {
+                        Console.WriteLine("Too many nonpredators on this tile! NonPredator {0} will die.", animal.id);
+                        deadAnimals.Add(animal);
+                        grid[animal.position_i, animal.indexAt2D] = null;
+                        animal.hasReproduced = true;
+                        break;
+                    }
+                }
+            }
+
+            
+        }
+        public object[,] InitializeGrid()
+        {
+            //In 2nd dimension array 0-3 are neighbouring tiles, 4-6 predators on a tile, 7-9 nonpredators on a tile
+            //When you want to do eat you have to iterate through all the tiles and check if 4-6 and 7-9 have animals in them
+            //(0,0) = bottom left corner
             int size = this.size_x * this.size_y;
-            int[,] grid = new int[size, 4]; //up to 4 neighbours
+            object[,] grid = new object[size, 10]; //up to 4 neighbours + 6 animals on a tile
             for (int i = 0; i < size; i++) //initialize the grid
             {
                 int currentX = i % (this.size_x);
                 int currentY = i / (this.size_x);
-                if (currentX > 0 && currentX <= this.size_x)
+                if (currentX > 0 && currentX < this.size_x)
                 {
                     grid[i, 0] = (currentX - 1) + (this.size_x * currentY);//left
 
@@ -77,11 +131,11 @@ namespace Simulation
                 if (currentY >= 0 && currentY < this.size_y - 1)
                 {
 
-                    grid[i, 2] = currentX + (this.size_x * (currentY + 1)); //up
+                    grid[i, 2] = currentX + (this.size_x * (currentY + 1)); //down
                 }
-                if (currentY > 0 && currentY <= this.size_y)
+                if (currentY > 0 && currentY < this.size_y)
                 {
-                    grid[i, 3] = currentX + (this.size_x * (currentY - 1)); //down
+                    grid[i, 3] = currentX + (this.size_x * (currentY - 1)); //up
                 }
 
             }
@@ -102,59 +156,76 @@ namespace Simulation
 
         public void Run()
         {
-            int[,] grid = InitializeGrid();
+            collect = new collectDeadAnimals(RemoveDeadAnimal);
+            grid = InitializeGrid();
+            AddAnimals(grid);
             int currentTurn = 0;
             while (currentTurn < maxTurn && predators.Count > 0)
             {
-                foreach(Predator predator in predators)
+                foreach (Animal animal in deadAnimals)
                 {
-                    predator.hasReproduced = false;
+                    collect(animal, grid);
                 }
-                foreach(NonPredator nonpredator in nonpredators)
+                foreach (Animal animal in hasReproducedList)
                 {
-                    nonpredator.hasReproduced = false;
+                    animal.hasReproduced = false;
                 }
+                hasReproducedList.Clear();
                 currentTurn++;
                 Console.WriteLine("\nTurn: {0}", currentTurn);
-                this.MoveAnimals(grid);
-                this.Eat(currentTurn);
-                this.Reproduce(currentTurn);
+                MoveAnimals(grid);
+                Eat(currentTurn, grid);
+                ReproduceAllAnimals(currentTurn);
+                foreach (Animal animal in deadAnimals)
+                {
+                    collect(animal, grid);
+                }
+                
 
             }
         }
 
-        void MoveAnimals(int[,] grid)
+        void MoveAnimals(object[,] grid)
         {
-            foreach (Predator predator in predators) //move all predators
+            foreach (Predator predator in predators)
             {
-                int x = predator.position_x;
-                int y = predator.position_y;
-                int i = x + (this.size_x * y);
-                int result = GetRandomPosition(i, grid);
-                predator.position_x = result % this.size_x;
-                predator.position_y = result / this.size_x;
-                Console.WriteLine("Predator {0} after moving - x: {1}, y: {2}", predator.id, predator.position_x, predator.position_y);
-
+                MoveAnimal(predator, grid);
             }
             foreach (NonPredator nonpredator in nonpredators)
             {
-                int x = nonpredator.position_x;
-                int y = nonpredator.position_y;
-                int i = x + (this.size_x * y);
-                int result = GetRandomPosition(i, grid);
-                nonpredator.position_x = result % this.size_x;
-                nonpredator.position_y = result / this.size_x;
-                Console.WriteLine("NonPredator {0} after moving - x: {1}, y: {2}", nonpredator.id, nonpredator.position_x, nonpredator.position_y);
+                MoveAnimal(nonpredator, grid);
             }
         }
 
-        int GetRandomPosition(int i, int[,] grid) //get one of possibilities of movement randomly
+        void MoveAnimal(Animal animal, object[,] grid)
+        {
+
+            grid[animal.position_i, animal.indexAt2D] = null;
+            int result = GetRandomPosition(animal.position_i, grid);
+            animal.position_x = result % this.size_x;
+            animal.position_y = result / this.size_x;
+            animal.position_i = animal.position_x + (size_x * animal.position_y);
+            AddAnimalToGrid(grid, result, animal);
+
+            if (animal is Predator)
+            {
+                Console.WriteLine("Predator {0} after moving - x: {1}, y: {2}", animal.id, animal.position_x,
+                    animal.position_y);
+            }
+            else if (animal is NonPredator)
+            {
+                Console.WriteLine("NonPredator {0} after moving - x: {1}, y: {2}", animal.id, animal.position_x,
+                    animal.position_y);
+            }
+        }
+
+        int GetRandomPosition(int i, object[,] grid) //get one of possibilities of movement randomly
         {
 
             int rnd = random.Next(4);
-            if (grid[i, rnd] > 0)
+            if (grid[i, rnd] != null && (int)grid[i, rnd] != 0)
             {
-                return grid[i, rnd];
+                return (int)grid[i, rnd];
             }
             else
             {
@@ -162,97 +233,169 @@ namespace Simulation
             }
         }
 
-        void Eat(int currentTurn)
+        void Eat(int currentTurn, object[,] grid)
         {
-            foreach (Predator predator in predators)
+            collect = new collectDeadAnimals(RemoveDeadAnimal);
+            foreach (Animal animal in deadAnimals)
             {
-
-                foreach (NonPredator nonpredator in nonpredators)
+                collect(animal, grid);
+            }
+            for (int i = 0; i < size_x * size_y; i++)
+            {
+                for (int j = 4; j <= 6; j++)
                 {
-
-                    if (predator.position_i == nonpredator.position_i)
+                    if (grid[i, j] != null && grid[i, j+3] != null)
                     {
-                        nonpredator.alive = false;
+                        Predator predator = (Predator)grid[i, 4];
                         predator.lastMeal = currentTurn;
-                        break;
+                        NonPredator nonpredator = (NonPredator)grid[i, 7];
+                        deadAnimals.Add(nonpredator);
+                        Console.WriteLine("NonPredator {0} has been eaten by Predator {1}", nonpredator.id, predator.id);
+
                     }
                 }
-                if (currentTurn - predator.lastMeal >= 2)
-                {
-                    predator.alive = false;
-                }
 
-
-            }
-            RemoveDeadAnimals();
-        }
-
-        void RemoveDeadAnimals()
-        {
-            for (int i = nonpredators.Count - 1; i >= 0; i--)
-            {
-                if (nonpredators[i].alive == false)
+                if (grid[i, 4] != null)
                 {
-                    Console.WriteLine("NonPredator {0} is going to be removed!", nonpredators[i].id);
-                    nonpredators.Remove(nonpredators[i]);
-                    i--;
-                }
-            }
-            for (int i = predators.Count - 1; i >= 0; i--)
-            {
-                if (predators[i].alive == false)
-                {
-                    Console.WriteLine("Predator {0} is going to be removed!", predators[i].id);
-                    predators.Remove(predators[i]);
-                    i--;
-                }
-            }
-        }
-
-        void Reproduce(int currentTurn)
-        {
-            for (int j = predators.Count - 1; j >=0; j--)
-            {
-                for (int i = predators.Count - 1; i >= 0; i--)
-                {
-                    if (predators[j].hasReproduced == false && predators[i].hasReproduced == false)
+                    Predator predator = (Predator)grid[i, 4];
+                    if (currentTurn - predator.lastMeal >= 2)
                     {
-                        if (predators[j].position_x == predators[i].position_x &&
-                            predators[j].position_y == predators[i].position_y &&
-                            predators[j].sex != predators[i].sex)
+                        deadAnimals.Add(predator);
+                        Console.WriteLine("Predator {0} has died", predator.id);
+                    }
+                }
+
+            }
+
+            foreach (Animal animal in deadAnimals)
+            {
+                collect(animal, grid);
+            }
+
+        }
+
+        void RemoveDeadAnimal(Animal animal, object[,] grid)
+        {
+            grid[animal.position_i, animal.indexAt2D] = null;
+
+            if (animal is Predator)
+            {
+                predators.Remove((Predator)animal);
+                
+                
+            }
+            else if (animal is NonPredator)
+            {
+                nonpredators.Remove((NonPredator)animal);
+            }
+        }
+
+        void CreateNewAnimal(int currentTurn, Animal animal1, Animal animal2)
+        {
+            if (animal1 is Predator)
+            {
+                index++;
+                Predator newPredator = new Predator(GetRandomSex(), random.Next(this.size_x), random.Next(this.size_y),
+                    index, currentTurn, this.size_x);
+                predators.Add(newPredator);
+                AddAnimalToGrid(grid, newPredator.position_i, newPredator);
+                animal1.hasReproduced = true;
+                animal2.hasReproduced = true;
+                hasReproducedList.Add(animal1);
+                hasReproducedList.Add(animal2);
+                Console.WriteLine("New Predator! Child of {0} and {1}, x: {2}, y: {3}", 
+                    animal1.id, animal2.id, newPredator.position_x, newPredator.position_y);
+
+            }
+            else if (animal1 is NonPredator)
+            {
+                index++;
+                NonPredator newNonpredator = new NonPredator(GetRandomSex(), random.Next(this.size_x), random.Next(this.size_y),
+                    index, this.size_x);
+                nonpredators.Add(newNonpredator);
+                AddAnimalToGrid(grid, newNonpredator.position_i, newNonpredator);
+                animal1.hasReproduced = true;
+                animal2.hasReproduced = true;
+                hasReproducedList.Add(animal1);
+                hasReproducedList.Add(animal2);
+                Console.WriteLine("New NonPredator! Child of {0} and {1}, x: {2}, y: {3}", 
+                    animal1.id, animal2.id, newNonpredator.position_x, newNonpredator.position_y);
+            }
+        }
+
+        void ReproduceAllAnimals(int currentTurn)
+        {
+            for (int i = 0; i < size_x * size_y; i++)
+            {
+
+                if (grid[i, 4] != null && grid[i, 5] != null) //predators
+                {
+                    
+                    Predator predator1 = (Predator)grid[i, 4];
+                    Predator predator2 = (Predator)grid[i, 5];
+                    Sex sex1 = predator1.sex;
+                    Sex sex2 = predator2.sex;
+                    if (sex1 != sex2 && predator1.hasReproduced == false && predator2.hasReproduced == false)
+                    {
+                        CreateNewAnimal(currentTurn, predator1, predator2);
+
+                    }
+
+                    if (grid[i, 6] != null)
+                    {
+
+                        Predator predator3 = (Predator)grid[i, 6];
+                        
+                        Sex sex3 = predator3.sex;
+                        if (sex1 != sex3 && predator1.hasReproduced == false && predator3.hasReproduced == false)
                         {
-                            index++;
-                            predators.Add(new Predator(GetRandomSex(), random.Next(this.size_x), random.Next(this.size_y),
-                                index, currentTurn, this.size_x));
-                            Console.WriteLine("New Predator! Child of {0} and {1}", predators[j].id, predators[i].id);
-                            break;
+                            CreateNewAnimal(currentTurn, predator1, predator3);
+
+                        }
+                        else if (sex2 != sex3 && predator2.hasReproduced == false && predator3.hasReproduced == false)
+                        {
+                            CreateNewAnimal(currentTurn, predator2, predator3);
+
+                        }
+                    }
+
+                }
+
+                if (grid[i, 7] != null && grid[i, 8] != null) //nonpredators
+                {
+                    NonPredator nonpredator1 = (NonPredator)grid[i, 7];
+                    NonPredator nonpredator2 = (NonPredator)grid[i, 8];
+
+                    Sex sex1 = nonpredator1.sex;
+                    Sex sex2 = nonpredator2.sex;
+                    if (sex1 != sex2 && nonpredator1.hasReproduced == false && nonpredator2.hasReproduced == false)
+                    {
+                        CreateNewAnimal(currentTurn, nonpredator1, nonpredator2);
+
+                    }
+
+                    if (grid[i, 9] != null)
+                    {
+                        NonPredator nonpredator3 = (NonPredator)grid[i, 9];
+                        Sex sex3 = nonpredator3.sex;
+                        if (sex1 != sex3 && nonpredator1.hasReproduced == false && nonpredator3.hasReproduced == false)
+                        {
+                            CreateNewAnimal(currentTurn, nonpredator1, nonpredator3);
+
+                        }
+                        else if (sex2 != sex3 && nonpredator2.hasReproduced == false && nonpredator3.hasReproduced == false)
+                        {
+                            CreateNewAnimal(currentTurn, nonpredator2, nonpredator3);
+
                         }
                     }
                 }
+
             }
-            for(int j = nonpredators.Count-1;j >=0; j--)
-            {
-                for (int i = nonpredators.Count-1; i >= 0; i--)
-                {
-                    if (nonpredators[j].hasReproduced == false && nonpredators[i].hasReproduced == false)
-                    {
-                        if (nonpredators[j].position_x == nonpredators[i].position_x &&
-                            nonpredators[j].position_y == nonpredators[i].position_y &&
-                            nonpredators[j].sex != nonpredators[i].sex)
-                        {
-                            index++;
-                            nonpredators.Add(new NonPredator(GetRandomSex(), random.Next(this.size_x), random.Next(this.size_y),
-                                index, this.size_x));
-                            nonpredators[j].hasReproduced = true;
-                            nonpredators[i].hasReproduced = true;
-                            Console.WriteLine("New Non Predator! Child of {0} and {1}", nonpredators[j].id, nonpredators[i].id);
-                            break;
-                        }
-                    }
-                }
-            }
+            
         }
-
-
     }
+
+
 }
+

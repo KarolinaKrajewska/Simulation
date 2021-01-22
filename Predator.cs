@@ -8,7 +8,6 @@ namespace Simulation
     class Predator : Animal
     {
         public int hasEaten = 0; //has the Predator eaten this turn? 0 = no, 1 = yes
-        Random random = new Random();
         public int lastMeal;
 
         public Predator(Sex sex, int x, int y, int index, int meal, int size_x)
