@@ -333,7 +333,7 @@ namespace Simulation
                 j = 7;
             }
 
-            if (grid[i, j] != null && grid[i, j+1] != null) //predators
+            if (grid[i, j] != null && grid[i, j+1] != null)
             {
 
                 Animal animal1 = (Animal)grid[i, j];
@@ -375,68 +375,7 @@ namespace Simulation
 
                 ReproduceSpecies(currentTurn, true, grid, i);
                 ReproduceSpecies(currentTurn, false, grid, i);
-                /*if (grid[i, 4] != null && grid[i, 5] != null) //predators
-                {
-                    
-                    Predator predator1 = (Predator)grid[i, 4];
-                    Predator predator2 = (Predator)grid[i, 5];
-                    Sex sex1 = predator1.sex;
-                    Sex sex2 = predator2.sex;
-                    if (sex1 != sex2 && predator1.hasReproduced == false && predator2.hasReproduced == false)
-                    {
-                        CreateNewAnimal(currentTurn, predator1, predator2);
-
-                    }
-
-                    if (grid[i, 6] != null)
-                    {
-
-                        Predator predator3 = (Predator)grid[i, 6];
-                        
-                        Sex sex3 = predator3.sex;
-                        if (sex1 != sex3 && predator1.hasReproduced == false && predator3.hasReproduced == false)
-                        {
-                            CreateNewAnimal(currentTurn, predator1, predator3);
-
-                        }
-                        else if (sex2 != sex3 && predator2.hasReproduced == false && predator3.hasReproduced == false)
-                        {
-                            CreateNewAnimal(currentTurn, predator2, predator3);
-
-                        }
-                    }
-
-                }
-
-                if (grid[i, 7] != null && grid[i, 8] != null) //nonpredators
-                {
-                    NonPredator nonpredator1 = (NonPredator)grid[i, 7];
-                    NonPredator nonpredator2 = (NonPredator)grid[i, 8];
-
-                    Sex sex1 = nonpredator1.sex;
-                    Sex sex2 = nonpredator2.sex;
-                    if (sex1 != sex2 && nonpredator1.hasReproduced == false && nonpredator2.hasReproduced == false)
-                    {
-                        CreateNewAnimal(currentTurn, nonpredator1, nonpredator2);
-
-                    }
-
-                    if (grid[i, 9] != null)
-                    {
-                        NonPredator nonpredator3 = (NonPredator)grid[i, 9];
-                        Sex sex3 = nonpredator3.sex;
-                        if (sex1 != sex3 && nonpredator1.hasReproduced == false && nonpredator3.hasReproduced == false)
-                        {
-                            CreateNewAnimal(currentTurn, nonpredator1, nonpredator3);
-
-                        }
-                        else if (sex2 != sex3 && nonpredator2.hasReproduced == false && nonpredator3.hasReproduced == false)
-                        {
-                            CreateNewAnimal(currentTurn, nonpredator2, nonpredator3);
-
-                        }
-                    }
-                } */
+               
 
             }
             
