@@ -48,7 +48,7 @@ namespace Simulation
                     Console.WriteLine("New Predator {0} - x: {1}, y: {2}, sex: {3}", predator.id,
                         predator.position_x, predator.position_y, predator.sex);
                 }
-                else if (isPredator == 0) //create a nonpredator
+                else //create a nonpredator
                 {
                     NonPredator nonpredator = new NonPredator(GetRandomSex(), x, y, index, this.size_x);
                     nonpredators.Add(nonpredator);
@@ -292,35 +292,80 @@ namespace Simulation
 
         void CreateNewAnimal(int currentTurn, Animal animal1, Animal animal2)
         {
+            index++;
+            animal1.hasReproduced = true;
+            animal2.hasReproduced = true;
+            hasReproducedList.Add(animal1);
+            hasReproducedList.Add(animal2);
+
             if (animal1 is Predator)
             {
-                index++;
-                Predator newPredator = new Predator(GetRandomSex(), random.Next(this.size_x), random.Next(this.size_y),
+                
+                Predator newAnimal = new Predator(GetRandomSex(), random.Next(this.size_x), random.Next(this.size_y),
                     index, currentTurn, this.size_x);
-                predators.Add(newPredator);
-                AddAnimalToGrid(grid, newPredator.position_i, newPredator);
-                animal1.hasReproduced = true;
-                animal2.hasReproduced = true;
-                hasReproducedList.Add(animal1);
-                hasReproducedList.Add(animal2);
+                predators.Add(newAnimal);
+                AddAnimalToGrid(grid, newAnimal.position_i, newAnimal);
                 Console.WriteLine("New Predator! Child of {0} and {1}, x: {2}, y: {3}", 
-                    animal1.id, animal2.id, newPredator.position_x, newPredator.position_y);
+                    animal1.id, animal2.id, newAnimal.position_x, newAnimal.position_y);
 
             }
             else if (animal1 is NonPredator)
             {
-                index++;
-                NonPredator newNonpredator = new NonPredator(GetRandomSex(), random.Next(this.size_x), random.Next(this.size_y),
+                
+                NonPredator newAnimal = new NonPredator(GetRandomSex(), random.Next(this.size_x), random.Next(this.size_y),
                     index, this.size_x);
-                nonpredators.Add(newNonpredator);
-                AddAnimalToGrid(grid, newNonpredator.position_i, newNonpredator);
-                animal1.hasReproduced = true;
-                animal2.hasReproduced = true;
-                hasReproducedList.Add(animal1);
-                hasReproducedList.Add(animal2);
+                nonpredators.Add(newAnimal);
+                AddAnimalToGrid(grid, newAnimal.position_i, newAnimal);
                 Console.WriteLine("New NonPredator! Child of {0} and {1}, x: {2}, y: {3}", 
-                    animal1.id, animal2.id, newNonpredator.position_x, newNonpredator.position_y);
+                    animal1.id, animal2.id, newAnimal.position_x, newAnimal.position_y);
             }
+            
+        }
+
+        void ReproduceSpecies(int currentTurn, bool isPredator, object[,] grid, int i) //i = current index
+        {
+            int j;
+            if (isPredator == true)
+            {
+                j = 4;
+            } else
+            {
+                j = 7;
+            }
+
+            if (grid[i, j] != null && grid[i, j+1] != null) //predators
+            {
+
+                Animal animal1 = (Animal)grid[i, j];
+                Animal animal2 = (Animal)grid[i, j+1];
+                Sex sex1 = animal1.sex;
+                Sex sex2 = animal2.sex;
+                if (sex1 != sex2 && animal1.hasReproduced == false && animal2.hasReproduced == false)
+                {
+                    CreateNewAnimal(currentTurn, animal1, animal2);
+
+                }
+
+                if (grid[i, j+2] != null)
+                {
+
+                    Animal animal3 = (Animal)grid[i, j+2];
+
+                    Sex sex3 = animal3.sex;
+                    if (sex1 != sex3 && animal1.hasReproduced == false && animal3.hasReproduced == false)
+                    {
+                        CreateNewAnimal(currentTurn, animal1, animal3);
+
+                    }
+                    else if (sex2 != sex3 && animal2.hasReproduced == false && animal3.hasReproduced == false)
+                    {
+                        CreateNewAnimal(currentTurn, animal2, animal3);
+
+                    }
+                }
+
+            }
+
         }
 
         void ReproduceAllAnimals(int currentTurn)
@@ -328,7 +373,9 @@ namespace Simulation
             for (int i = 0; i < size_x * size_y; i++)
             {
 
-                if (grid[i, 4] != null && grid[i, 5] != null) //predators
+                ReproduceSpecies(currentTurn, true, grid, i);
+                ReproduceSpecies(currentTurn, false, grid, i);
+                /*if (grid[i, 4] != null && grid[i, 5] != null) //predators
                 {
                     
                     Predator predator1 = (Predator)grid[i, 4];
@@ -389,7 +436,7 @@ namespace Simulation
 
                         }
                     }
-                }
+                } */
 
             }
             
