@@ -1,0 +1,5 @@
+# Simulation
+This program runs a short simulation of 5 turns. It creates 10 animals of random class (predators or non-predators) and places them on a 5x5 coordinate system. I wrote it during my fourth year at Bard College as a project outside of class in order to apply for an internship in CrossMinded Games (it was the company's entry test policy).
+You can customize size of the coordinate system, number of turns and number of animals in the simulation by changing the values in the initialization of a new Simulation, in the file Program.
+The program uses event-based approach to delete dead animals from the coordinate system. It also creates an additional, two-dimensional array called grid[,] that stores additional information about specific tiles. First dimension index specifies which tile is concerned, and second dimension indices provide the following: what are the adjacent tiles (0-3) and which (if any) animals reside on this position in the coordinate system (4-6 for predators, 7-9 for non-predators).
+You can trace the process of running a Simulation on the terminal.
