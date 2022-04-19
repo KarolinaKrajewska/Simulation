@@ -333,7 +333,7 @@ namespace Simulation
                 j = 7;
             }
 
-            if (grid[i, j] != null && grid[i, j+1] != null)
+            if (grid[i, j] != null && grid[i, j+1] != null) //predators
             {
 
                 Animal animal1 = (Animal)grid[i, j];
@@ -375,8 +375,7 @@ namespace Simulation
 
                 ReproduceSpecies(currentTurn, true, grid, i);
                 ReproduceSpecies(currentTurn, false, grid, i);
-               
-
+                
             }
             
         }
